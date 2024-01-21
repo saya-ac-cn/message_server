@@ -1,6 +1,6 @@
-### home_cloud
+### message_server
 
-基于rust语言构建的一个企业级基本框架
+基于rust语言构建的一个消息推送服务
 
 #### 规范约定：
 * 1、蛇形命名法（Snake Case）
@@ -28,12 +28,3 @@
   语句：跟C，Java语言等一样，每行语句结束都要添加;
 
   PS：Rust也不建议以“-rs”或“_rs”为后缀来命名包名，如果以此来命名，会强制性的将此后缀去掉。
-
-
-#### 遇到的疑难问题
-
-* 下载文件乱码
-
-  1）先对文件名进行urlencode，
-
-  2）然后加上*=utf-8，参考：https://www.iefans.net/xiazai-wenjian-http-bianma-content-disposition/

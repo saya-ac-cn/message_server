@@ -8,6 +8,6 @@ pub mod controller;
 pub mod config;
 pub mod service;
 mod domain;
-mod util;
+pub mod util;
 mod dao;
 pub mod middleware;

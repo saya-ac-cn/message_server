@@ -23,7 +23,15 @@ pub struct ApplicationConfig {
     /// 白名单接口
     pub white_list_api: Vec<String>,
     /// 项目产生的数据目录
-    pub data_dir: String
+    pub data_dir: String,
+    /// 公众号的appid
+    pub wechat_appid: String,
+    /// 公众号的secret
+    pub wechat_secret: String,
+    /// 公众号获取access_token的url
+    pub wechat_access_token_url: String,
+    /// 公众号发送模板消息的url: String,
+    pub wechat_send_template_url: String,
 }
 
 impl Default for ApplicationConfig {
@@ -34,10 +42,10 @@ impl Default for ApplicationConfig {
         let result: ApplicationConfig =
             serde_yaml::from_str(yml_data).expect("load config file fail");
         if result.debug {
-            println!("[home_cloud] load config:{:?}", result);
-            println!("[home_cloud] ///////////////////// Start On Debug Mode ////////////////////////////");
+            println!("[message_server] load config:{:?}", result);
+            println!("[message_server] ///////////////////// Start On Debug Mode ////////////////////////////");
         } else {
-            println!("[home_cloud] ///////////////////// Start On Release Mode ////////////////////////////");
+            println!("[message_server] ///////////////////// Start On Release Mode ////////////////////////////");
         }
         result
     }

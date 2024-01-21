@@ -13,6 +13,8 @@ pub const NOT_PARAMETER_CODE: i32 = -4;
 pub const TOKEN_ERROR_CODE: i32 = -5;
 /// 文件错误
 pub const FILE_IO_ERROR_CODE: i32 = -6;
+/// 错误的请求
+pub const BAD_REQUEST_ERROR_CODE: i32 = -7;
 /// 未知的错误类型（由内部意外抛出的，框架）
 pub const UNKNOWN_ERROR_CODE: i32 = -404;
 
@@ -45,3 +47,5 @@ pub const REQUEST_TOKEN_PREFIX: &str = "request";
 pub const BROWSER_PLATFORM_TTL: u64 = 3600;
 /// 定义桌面端token的过期时间，单位：秒
 pub const DESKTOP_PLATFORM_TTL: u64 = 604800;
+/// 定义防重复请求token的缓存前缀
+pub const WECHAT_ACCESS_TOKEN_PREFIX: &str = "wechat_access_token";

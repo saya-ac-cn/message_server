@@ -1,14 +1,16 @@
 use actix_web::{App, HttpServer, web};
-use home_cloud::controller::user_controller;
-use home_cloud::config::CONTEXT;
-use home_cloud::middleware::actix_interceptor::ActixInterceptor;
+use message_server::controller::message_controller;
+use message_server::config::CONTEXT;
+use message_server::middleware::actix_interceptor::ActixInterceptor;
+use message_server::config::scheduler::Scheduler;
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
     // 日志初始化
-    home_cloud::config::logger::init_log();
+    message_server::config::logger::init_log();
     // 数据库连接池初始化
     CONTEXT.init_pool().await;
+    Scheduler::init_system_scheduler().await;
     HttpServer::new(|| {
         App::new()
             .wrap(ActixInterceptor {})
@@ -18,12 +20,13 @@ async fn main() -> std::io::Result<()> {
             // 映射静态资源目录
             //.service(fs::Files::new("/warehouse", &CONTEXT.config.data_dir))
             .service(
-                web::scope("/backend/system")
-                    .service(user_controller::user_add)
-                    .service(user_controller::user_update)
-                    .service(user_controller::user_detail)
-                    .service(user_controller::user_remove)
-                    .service(user_controller::user_page)
+                web::scope("/message")
+                    .service(message_controller::send_message)
+                    // .service(message_controller::user_add)
+                    // .service(message_controller::user_update)
+                    // .service(message_controller::user_detail)
+                    // .service(message_controller::user_remove)
+                    // .service(message_controller::user_page)
             )
     })
         .bind(&CONTEXT.config.server_url)?

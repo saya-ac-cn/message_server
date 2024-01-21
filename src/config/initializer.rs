@@ -1,9 +1,10 @@
 use lazy_static::lazy_static;
 use rbatis::rbatis::RBatis;
 use crate::config::redis_client::RedisClient;
-use crate::service::user_service::UserService;
+use crate::service::message_service::MessageService;
 use crate::config::ApplicationConfig;
-
+use delay_timer::prelude::{DelayTimer, DelayTimerBuilder};
+use tokio::sync::Mutex;
 
 // 第一种初始化方法
 // /// CONTEXT is all of the service struct
@@ -13,6 +14,7 @@ use crate::config::ApplicationConfig;
 lazy_static! {
     // CONTEXT is all of the service struct
     pub static ref CONTEXT: ServiceContext = ServiceContext::default();
+    pub static ref SCHEDULER: Mutex<DelayTimer> = Mutex::new(DelayTimerBuilder::default().build());
 }
 
 // 为方便使用，直接定义成宏
@@ -27,7 +29,7 @@ pub struct ServiceContext {
     pub config: ApplicationConfig,
     pub redis_client: RedisClient,
     pub primary_rbatis: RBatis,
-    pub user_service: UserService
+    pub user_service: MessageService
 }
 
 impl ServiceContext {
@@ -44,18 +46,18 @@ impl ServiceContext {
     }
 
     pub async fn init_datasource(&self, rbatis: &RBatis, url: &str, name: &str) {
-        log::info!("[home_cloud] rbatis {} init ({})...", name, url);
+        log::info!("[message_server] rbatis {} init ({})...", name, url);
         let driver = rbdc_mysql::driver::MysqlDriver {};
         let driver_name = format!("{:?}", driver);
         rbatis
             .init(driver, url)
-            .expect(&format!("[home_cloud] rbatis {} init fail!", name));
+            .expect(&format!("[message_server] rbatis {} init fail!", name));
         rbatis.acquire().await.expect(&format!(
             "rbatis connect database(driver={},url={}) fail",
             driver_name, url
         ));
         log::info!(
-            "[home_cloud] rbatis {} init success! pool state = {:?}",
+            "[message_server] rbatis {} init success! pool state = {:?}",
             name,
             rbatis.get_pool().expect("pool not init!").status()
         );
@@ -69,7 +71,7 @@ impl Default for ServiceContext {
         ServiceContext {
             primary_rbatis: crate::dao::init_rbatis(&config),
             redis_client: RedisClient::new(&config.redis_url),
-            user_service: UserService{},
+            user_service: MessageService {},
             config,
         }
     }

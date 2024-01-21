@@ -13,9 +13,9 @@ pub struct RedisClient {
 
 impl RedisClient {
     pub fn new(url: &str) -> Self {
-        println!("[home_cloud] conncect redis ({})...", url);
+        println!("[message_server] conncect redis ({})...", url);
         let client = redis::Client::open(url).unwrap();
-        println!("[home_cloud] conncect redis success!");
+        println!("[message_server] conncect redis success!");
         Self { client }
     }
 
