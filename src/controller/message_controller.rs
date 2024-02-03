@@ -4,11 +4,18 @@ use crate::domain::dto::user::{UserDTO, UserPageDTO};
 use crate::config::CONTEXT;
 use crate::domain::vo::RespVO;
 use serde_json::Value;
-/// 获取用户分页列表
-#[post("/send/{account}/{template}/{method}")]
-pub async fn send_message(path: web::Path<(String, String,String)>,arg: web::Json<Value>) -> impl Responder {
-    let (account,template,method) = path.into_inner();
-    let vo = CONTEXT.user_service.send_message(&account,&template,&method,&arg.0).await;
+
+#[post("/send/wechat/{account}/{template}")]
+pub async fn send_wechat_message(path: web::Path<(String, String)>,arg: web::Json<Value>) -> impl Responder {
+    let (account,template) = path.into_inner();
+    let vo = CONTEXT.user_service.send_wechat_message(&account,&template,&arg.0).await;
+    return RespVO::from_result(&vo).resp_json();
+}
+
+#[post("/send/mail/{account}/{template}")]
+pub async fn send_mail_message(path: web::Path<(String, String)>,arg: web::Json<Value>) -> impl Responder {
+    let (account,template) = path.into_inner();
+    let vo = CONTEXT.user_service.send_mail_message(&account,&template,&arg.0).await;
     return RespVO::from_result(&vo).resp_json();
 }
 

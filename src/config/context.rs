@@ -1,3 +1,6 @@
+use config::{Config, File};
+
+
 /// 配置文件 映射后的结构配置
 #[derive(Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct ApplicationConfig {
@@ -32,15 +35,20 @@ pub struct ApplicationConfig {
     pub wechat_access_token_url: String,
     /// 公众号发送模板消息的url: String,
     pub wechat_send_template_url: String,
+    /// 发件人
+    pub from_mail: String,
+    /// 邮件服务器地址
+    pub mail_server: String,
+    /// 邮件服务器发送token
+    pub mail_token: String,
 }
 
 impl Default for ApplicationConfig {
     /// 加载yml配置，这里还不能用log::info!进行日志打印，因为还没有初始化
     fn default() -> Self {
-        let yml_data = include_str!("../../application.yml");
-        //load config
-        let result: ApplicationConfig =
-            serde_yaml::from_str(yml_data).expect("load config file fail");
+        let mut config = Config::default();
+        config.merge(File::with_name("application.yml")).unwrap();
+        let result: ApplicationConfig = config.try_into().unwrap();
         if result.debug {
             println!("[message_server] load config:{:?}", result);
             println!("[message_server] ///////////////////// Start On Debug Mode ////////////////////////////");

@@ -15,6 +15,7 @@ use crate::util::password_encoder_util::PasswordEncoder;
 use serde_json::{Map, Value};
 use crate::domain::dto::wechat_template_field_message::WeChatTemplateFieldMessageDTO;
 use crate::domain::dto::wechat_template_message::WeChatTemplateMessageDTO;
+use crate::util::mail_api::MailApi;
 use crate::util::result;
 use crate::util::we_chat_api::WeChatApi;
 
@@ -22,19 +23,15 @@ pub struct MessageService {}
 
 impl MessageService {
 
-    /// 发送消息
+    /// 发送微信消息
     /// param account 用户openid
     /// param template 消息模板id
-    /// param method 发送方式 0 -> 都发， 1-> 公众号，2-> 邮件
-    pub async fn send_message(&self,account: &str,template: &str,method: &str,arg: &Value)-> Result<bool>{
-        if account.is_empty() {
+    pub async fn send_wechat_message(&self,openid: &str,template: &str,arg: &Value)-> Result<bool>{
+        if openid.is_empty() {
             return Err(Error::from(("用户openid不能为空!", util::NOT_PARAMETER_CODE, )));
         }
         if template.is_empty() {
             return Err(Error::from(("消息模板id不能为空!", util::NOT_PARAMETER_CODE, )));
-        }
-        if method.is_empty() {
-            return Err(Error::from(("发送方式不能为空!", util::NOT_PARAMETER_CODE, )));
         }
         if !arg.is_object() {
             return Err(Error::from(("不支持的消息正文数据格式!", util::BAD_REQUEST_ERROR_CODE, )));
@@ -47,10 +44,10 @@ impl MessageService {
         if message.is_empty(){
             return Err(Error::from(("发送的消息正文不能为空!", util::NOT_PARAMETER_CODE, )));
         }
-        self.send_wechat_message(account,template,message).await
+        self.do_send_wechat_message(openid,template,message).await
     }
 
-    async fn send_wechat_message(&self,account: &str,template: &str,arg: &Map<String,Value>) -> Result<bool> {
+    async fn do_send_wechat_message(&self,openid: &str,template: &str,arg: &Map<String,Value>) -> Result<bool> {
         let mut fields: HashMap<String, WeChatTemplateFieldMessageDTO> = HashMap::new();
 
         for (key, value) in arg {
@@ -61,7 +58,7 @@ impl MessageService {
             fields.insert(key.to_string(),field);
         }
         let data = WeChatTemplateMessageDTO{
-            touser: Some(String::from(account)),
+            touser: Some(String::from(openid)),
             template_id: Some(String::from(template)),
             url: None,
             topcolor: None,
@@ -69,9 +66,44 @@ impl MessageService {
         };
         //println!("data{:?}",data);
         let result = WeChatApi::do_send_wechat_message(&data).await;
-        return Ok(true);
+        return Ok(result);
     }
 
+    /// 发送邮件消息
+    /// param mail     用户邮件地址
+    /// param template 消息模板id
+    pub async fn send_mail_message(&self,mail: &str,template: &str,arg: &Value)-> Result<bool>{
+        if mail.is_empty() {
+            return Err(Error::from(("用户mail不能为空!", util::NOT_PARAMETER_CODE, )));
+        }
+        if template.is_empty() {
+            return Err(Error::from(("消息模板id不能为空!", util::NOT_PARAMETER_CODE, )));
+        }
+        if !arg.is_object() {
+            return Err(Error::from(("不支持的消息正文数据格式!", util::BAD_REQUEST_ERROR_CODE, )));
+        }
+        let message_op  = arg.as_object();
+        if message_op.is_none(){
+            return Err(Error::from(("发送的消息正文不能为空!", util::NOT_PARAMETER_CODE, )));
+        }
+        let message = message_op.unwrap();
+        if message.is_empty(){
+            return Err(Error::from(("发送的消息正文不能为空!", util::NOT_PARAMETER_CODE, )));
+        }
+        self.do_send_mail_message(mail,template,message).await
+    }
+
+    async fn do_send_mail_message(&self,mail: &str,template: &str,arg: &Map<String,Value>) -> Result<bool> {
+        if "dump" == template {
+            let result = MailApi::send_dump_massage(mail,arg).await;
+            return Ok(result);
+        }
+        if "plan" == template {
+            let result = MailApi::send_plan_massage(mail,arg).await;
+            return Ok(result);
+        }
+        return Ok(false);
+    }
 
     // /// 用户分页
     // pub async fn user_page(&self, arg: &UserPageDTO) -> Result<Page<UserVO>> {

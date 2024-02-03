@@ -21,7 +21,8 @@ async fn main() -> std::io::Result<()> {
             //.service(fs::Files::new("/warehouse", &CONTEXT.config.data_dir))
             .service(
                 web::scope("/message")
-                    .service(message_controller::send_message)
+                    .service(message_controller::send_wechat_message)
+                    .service(message_controller::send_mail_message)
                     // .service(message_controller::user_add)
                     // .service(message_controller::user_update)
                     // .service(message_controller::user_detail)
