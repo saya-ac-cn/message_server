@@ -27,7 +27,7 @@ actix-http = "3"
 actix-multipart = "0.4"
 actix-files = "0.6.0"
 # 定时任务
-delay_timer = "0.11.4"
+delay_timer = "0.11.5"
 #snowflake
 rustflake = "0.1"
 #http client,use rust-tls replace to native tls
