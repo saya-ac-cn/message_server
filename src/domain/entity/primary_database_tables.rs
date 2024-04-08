@@ -53,3 +53,21 @@ pub struct LogType {
     pub category: Option<String>,
     pub detail: Option<String>,
 }
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CopyWriting {
+    pub id: Option<u64>,
+    pub content: Option<String>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct UserNoticeSetting {
+    pub name: Option<String>,
+    pub sex: Option<String>,
+    pub city: Option<String>,
+    pub birthday: Option<String>,
+    pub nickname: Option<String>,
+    pub open_id: Option<String>,
+    pub create_time: Option<String>,
+    pub update_time: Option<String>,
+}

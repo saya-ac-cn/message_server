@@ -34,6 +34,20 @@ impl DateTimeUtil for Option<DateTime<FixedOffset>> {
 pub struct DateUtils {}
 
 impl DateUtils {
+    /// 计算还有多少天过生日
+    pub fn days_until_birthday(birthday: NaiveDate) -> i64 {
+        let now = DateUtils::now().date_naive();
+        // 如果今天已经过了生日日期，那么下一个生日就在一年之后
+        let next_birthday = if now.month() > birthday.month() || (now.month() == birthday.month() && now.day() >= birthday.day()) {
+            birthday.with_year(now.year() + 1)
+        } else {
+            birthday.with_year(now.year())
+        };
+        // 计算距离下一个生日的天数
+        let duration = next_birthday.unwrap() - now;
+        duration.num_days()
+    }
+
     /// 获取指定月份的天数
     pub fn get_current_month_days(year: i32, month: u32) -> u32 {
         match month {

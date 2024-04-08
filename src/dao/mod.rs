@@ -1,6 +1,8 @@
 /// 数据库操作模块
 
 pub mod user_mapper;
+pub mod copy_writing_mapper;
+pub mod user_notice_setting_mapper;
 
 use rbatis::RBatis;
 use crate::config::ApplicationConfig;

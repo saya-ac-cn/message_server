@@ -1,8 +1,10 @@
-use actix_web::{App, HttpServer, web};
 use message_server::controller::message_controller;
 use message_server::config::CONTEXT;
 use message_server::middleware::actix_interceptor::ActixInterceptor;
 use message_server::config::scheduler::Scheduler;
+
+use actix_web::{web, App,HttpServer};
+
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
@@ -10,6 +12,7 @@ async fn main() -> std::io::Result<()> {
     message_server::config::logger::init_log();
     // 数据库连接池初始化
     CONTEXT.init_pool().await;
+    // 调度组件初始化
     Scheduler::init_system_scheduler().await;
     HttpServer::new(|| {
         App::new()
@@ -23,14 +26,13 @@ async fn main() -> std::io::Result<()> {
                 web::scope("/message")
                     .service(message_controller::send_wechat_message)
                     .service(message_controller::send_mail_message)
+                    .service(message_controller::send_care)
                     // .service(message_controller::user_add)
                     // .service(message_controller::user_update)
                     // .service(message_controller::user_detail)
                     // .service(message_controller::user_remove)
                     // .service(message_controller::user_page)
             )
-    })
-        .bind(&CONTEXT.config.server_url)?
-        .run()
-        .await
+    }).bind(&CONTEXT.config.server_url)?.run().await
+
 }

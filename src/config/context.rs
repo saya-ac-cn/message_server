@@ -41,6 +41,12 @@ pub struct ApplicationConfig {
     pub mail_server: String,
     /// 邮件服务器发送token
     pub mail_token: String,
+    /// 高德地图天气接口地址
+    pub amap_url: String,
+    ///高德天气接口地址密钥
+    pub amap_key: String,
+    /// 发送微信消息的模板(早安)
+    pub wechat_notice_template: String,
 }
 
 impl Default for ApplicationConfig {

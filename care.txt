@@ -24,6 +24,19 @@
 🍥 {{inspiring.DATA}}
 
 
+天气播报(*❦ღ❦)
+⏰ {{date.DATA}}
+💌 新的一天，阳光和你，活在当下便是最美。早安，要开心哦！
+🌍 {{city.DATA}}天⽓: {{weather.DATA}}
+🌡 温度: {{temperature.DATA}} ℃
+💦 湿度: {{humidity.DATA}} %RH
+💨 ⻛向: {{winddirection.DATA}}
+🖼 ⻛力: {{windpower.DATA}} 级
+🎂 距离{{nickname.DATA}}的⽣⽇还有 {{birthday.DATA}} 天
+
+🍥 {{inspiring.DATA}}
+
+
 
 既然选择远方，当不负青春，砥砺前行
 青春由磨砺而出彩，人生因奋斗而升华
@@ -59,4 +72,3 @@
 早晨起来，可以做很多事，比如：再睡一觉
 
 生气归生气又不是不喜欢你了。
-

@@ -1,10 +1,12 @@
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use actix_web::HttpRequest;
+use chrono::{Datelike, Duration, Local, NaiveDate};
 use log::error;
 use crate::dao::user_mapper::UserMapper;
 use crate::domain::dto::page::ExtendPageDTO;
 use crate::domain::dto::user::{UserDTO, UserPageDTO};
-use crate::domain::entity::User;
+use crate::domain::entity::{CopyWriting, User, UserNoticeSetting};
 use crate::domain::vo::user::UserVO;
 use crate::{primary_rbatis_pool, util};
 use crate::util::result::Result;
@@ -13,8 +15,11 @@ use crate::util::page::Page;
 use crate::util::date_time::{DateTimeUtil, DateUtils};
 use crate::util::password_encoder_util::PasswordEncoder;
 use serde_json::{Map, Value};
+use crate::config::CONTEXT;
+use crate::dao::user_notice_setting_mapper::UserNoticeSettingMapper;
 use crate::domain::dto::wechat_template_field_message::WeChatTemplateFieldMessageDTO;
 use crate::domain::dto::wechat_template_message::WeChatTemplateMessageDTO;
+use crate::util::amap_util::AmapUtils;
 use crate::util::mail_api::MailApi;
 use crate::util::result;
 use crate::util::we_chat_api::WeChatApi;
@@ -104,6 +109,109 @@ impl MessageService {
         }
         return Ok(false);
     }
+
+    /// 发送微信消息
+    /// param account 用户openid
+    /// param template 消息模板id
+    pub async fn send_care(&self)-> Result<bool>{
+        // 获取当前日期
+        let current_date = Local::now();
+        // 获取当前日期的号数
+        let current_id = current_date.day() as u64;
+        let query_copy_writing_wrap = CopyWriting::select_by_id(primary_rbatis_pool!(),current_id).await;
+        if query_copy_writing_wrap.is_err() {
+            error!("查询文案异常：{}", query_copy_writing_wrap.unwrap_err());
+            return Err(Error::from("查询文案异常!"));
+        }
+        let copy_writing_option = query_copy_writing_wrap.unwrap().into_iter().next();
+        let copy_writing = copy_writing_option.ok_or_else(|| {
+            Error::from((
+                format!("id={} 的文案不存在!", current_id),
+                util::NOT_EXIST_CODE,
+            ))
+        })?;
+
+        let query_user_wrap = UserNoticeSetting::select_all(primary_rbatis_pool!()).await;
+        if query_user_wrap.is_err() {
+            error!("查询用户异常：{}", query_user_wrap.unwrap_err());
+            return Err(Error::from("查询用户失败!"));
+        }
+        let users = query_user_wrap.unwrap();
+        let today: String = DateTimeUtil::naive_date_time_to_str(&Some(DateUtils::now()), &util::FORMAT_Y_M_D).unwrap();
+        for item in users{
+            let weather = AmapUtils::weather_info(&item.city.unwrap()).await;
+
+            let mut fields: HashMap<String, WeChatTemplateFieldMessageDTO> = HashMap::new();
+
+            let field = WeChatTemplateFieldMessageDTO{
+                value: Some(today.clone()),
+                color: Some(String::from("000")),
+            };
+            fields.insert(String::from("date"),field);
+            let field = WeChatTemplateFieldMessageDTO{
+                value: weather.city,
+                color: Some(String::from("000")),
+            };
+            fields.insert(String::from("city"),field);
+            let field = WeChatTemplateFieldMessageDTO{
+                value: weather.weather,
+                color: Some(String::from("000")),
+            };
+            fields.insert(String::from("weather"),field);
+            let field = WeChatTemplateFieldMessageDTO{
+                value: weather.temperature,
+                color: Some(String::from("000")),
+            };
+            fields.insert(String::from("temperature"),field);
+            let field = WeChatTemplateFieldMessageDTO{
+                value: weather.humidity,
+                color: Some(String::from("000")),
+            };
+            fields.insert(String::from("humidity"),field);
+            let field = WeChatTemplateFieldMessageDTO{
+                value: weather.winddirection,
+                color: Some(String::from("000")),
+            };
+            fields.insert(String::from("winddirection"),field);
+            let field = WeChatTemplateFieldMessageDTO{
+                value: weather.windpower,
+                color: Some(String::from("000")),
+            };
+            fields.insert(String::from("windpower"),field);
+            let field = WeChatTemplateFieldMessageDTO{
+                value: item.nickname,
+                color: Some(String::from("000")),
+            };
+            fields.insert(String::from("nickname"),field);
+
+            let standard_time_result = chrono::NaiveDate::parse_from_str(item.birthday.clone().expect("错误的日期").as_str(), &util::FORMAT_Y_M_D, );
+            if standard_time_result.is_err() {
+                error!("格式化日期发生异常:{}", standard_time_result.unwrap_err());
+                continue;
+            }
+            let birthday = standard_time_result.unwrap();
+            let field = WeChatTemplateFieldMessageDTO{
+                value: Some(DateUtils::days_until_birthday(birthday).to_string()),
+                color: Some(String::from("000")),
+            };
+            fields.insert(String::from("birthday"),field);
+            let field = WeChatTemplateFieldMessageDTO{
+                value: copy_writing.content.clone(),
+                color: Some(String::from("000")),
+            };
+            fields.insert(String::from("inspiring"),field);
+            let data = WeChatTemplateMessageDTO{
+                touser: item.open_id,
+                template_id: Some(CONTEXT.config.wechat_notice_template.to_string()),
+                url: None,
+                topcolor: None,
+                data: Some(fields),
+            };
+            WeChatApi::do_send_wechat_message(&data).await;
+        }
+        return Ok(false);
+    }
+
 
     // /// 用户分页
     // pub async fn user_page(&self, arg: &UserPageDTO) -> Result<Page<UserVO>> {

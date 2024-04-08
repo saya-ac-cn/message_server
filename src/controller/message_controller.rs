@@ -19,6 +19,15 @@ pub async fn send_mail_message(path: web::Path<(String, String)>,arg: web::Json<
     return RespVO::from_result(&vo).resp_json();
 }
 
+
+
+#[get("/send/care")]
+pub async fn send_care() -> impl Responder {
+    let vo = CONTEXT.user_service.send_care().await;
+    return RespVO::from_result(&vo).resp_json();
+}
+
+
 // /// 获取用户分页列表
 // #[get("/user/page")]
 // pub async fn user_page(arg: web::Json<UserPageDTO>) -> impl Responder {
